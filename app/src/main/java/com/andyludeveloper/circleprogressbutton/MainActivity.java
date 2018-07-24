@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     CircleProgressButton cpb;
@@ -24,19 +25,17 @@ public class MainActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_DOWN:
                         if(pressedButtonBeginTime==0) {
                             setPressedButtonBeginTime();
-                            cpb.performClick(pressedButtonBeginTime);
+                            cpb.click();
                         }
-                        break;
-                    case MotionEvent.ACTION_MOVE:
                         break;
                     case MotionEvent.ACTION_UP:
                         cpb.releaseClick();
                         long currentTime = System.currentTimeMillis();
                         if(currentTime - pressedButtonBeginTime > 3000){
                             //DO something
-                        }else{
-                            resetPressedButtonBeginTime();
+                            Toast.makeText(getBaseContext(), "3secs", Toast.LENGTH_SHORT).show();
                         }
+                        resetPressedButtonBeginTime();
                         break;
                 }
                 view.performClick();

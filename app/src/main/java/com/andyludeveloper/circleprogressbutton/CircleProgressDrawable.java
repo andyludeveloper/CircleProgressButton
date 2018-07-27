@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
@@ -14,7 +13,6 @@ import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Property;
 import android.view.animation.DecelerateInterpolator;
@@ -33,10 +31,10 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
 
     private static final String TAG = CircleProgressDrawable.class.getSimpleName();
 
-    public CircleProgressDrawable(Context context, AttributeSet attr){
+    public CircleProgressDrawable(Context context){
         this.context = context;
-        setProgressPaint(attr);
-        setProgressingPaint(attr);
+        setProgressPaint();
+        setProgressingPaint();
         setupAnimations();
     }
 
@@ -45,34 +43,41 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
         Log.d(TAG, "draw");
         int width= canvas.getWidth();
         int height = canvas.getHeight();
-        canvas.drawCircle(width/2, height/2, (width-(getCircleWidthInPX()*2))/2, progressPaint);
+        canvas.drawCircle(width/2, height/2, (width-(getCircleWidthInPX()*2))/2, getProgressPaint());
         if(isRunning()) {
             canvas.drawArc(getOval(width, height, (width - (getCircleWidthInPX() * 2)) / 2), 270.0f, getCurrentSweepAngle(),
                     false, getProgressingPaint());
         }
     }
-    private void setProgressPaint(AttributeSet attrs){
+
+    private void setProgressPaint(){
         if(progressPaint == null) {
             progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            if(attrs!=null) {
-                TypedArray a = context.getTheme().obtainStyledAttributes(
-                        attrs,
-                        R.styleable.CircleProgressButton,
-                        0, 0);
-                try {
-                    progressPaint.setColor(a.getColor(R.styleable.CircleProgressButton_normalCircleColor,
-                            context.getResources().getColor(R.color.grey)));
-                } finally {
-                    a.recycle();
-                }
-            }
+            progressPaint.setColor(context.getResources().getColor(R.color.grey));
             progressPaint.setStrokeWidth(getCircleWidthInPX());
             progressPaint.setStyle(Paint.Style.STROKE);
         }
     }
 
+    public android.graphics.Paint getProgressPaint() {
+        return progressPaint;
+    }
+
     private float getCircleWidthInPX(){
         return context.getResources().getDimensionPixelSize(R.dimen.circle_progress_width);
+    }
+
+    private void setProgressingPaint(){
+        if(progressingPaint == null){
+            progressingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            progressingPaint.setColor(context.getResources().getColor(R.color.lightGreen));
+            progressingPaint.setStrokeWidth(getCircleWidthInPX());
+            progressingPaint.setStyle(Paint.Style.STROKE);
+        }
+    }
+
+    private Paint getProgressingPaint(){
+        return progressingPaint;
     }
 
     private RectF getOval(float width, float height, float radius){
@@ -90,6 +95,7 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
         return oval;
     }
 
+    // Animatable
     @Override
     public void start() {
         Log.d(TAG, "start");
@@ -105,6 +111,16 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
         Log.d(TAG, "stop");
         setRunning(false);
     }
+
+    @Override
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    private void setRunning(boolean running){
+        isRunning = running;
+    }
+
     private boolean mModeAppearing;
     private float mCurrentGlobalAngleOffset;
     private void toggleAppearingMode() {
@@ -138,8 +154,8 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
 
             @Override
             public void onAnimationRepeat(Animator animation) {
-                toggleAppearingMode();
                 Log.d(TAG,"onAnimationRepeat");
+                toggleAppearingMode();
             }
         });
     }
@@ -156,42 +172,19 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
             object.setCurrentSweepAngle(value);
         }
     };
-    @Override
-    public boolean isRunning() {
-        return isRunning;
+
+    private float mCurrentSweepAngle;
+    private void setCurrentSweepAngle(float currentSweepAngle) {
+        Log.d(TAG, "setCurrentSweepAngle, angle= "+currentSweepAngle);
+        mCurrentSweepAngle = currentSweepAngle;
+        invalidateSelf();
     }
 
-    private void setRunning(boolean running){
-        isRunning = running;
+    private float getCurrentSweepAngle() {
+        return mCurrentSweepAngle;
     }
 
-
-    private void setProgressingPaint(AttributeSet attrs){
-        if(progressingPaint == null){
-            progressingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-            if(attrs!=null) {
-                TypedArray a = context.getTheme().obtainStyledAttributes(
-                        attrs,
-                        R.styleable.CircleProgressButton,
-                        0, 0);
-                try {
-                    progressingPaint.setColor(a.getColor(R.styleable.CircleProgressButton_progressCircleColor,
-                            context.getResources().getColor(android.R.color.holo_red_dark)));
-                } finally {
-                    a.recycle();
-                }
-            }
-
-            progressingPaint.setStrokeWidth(getCircleWidthInPX());
-            progressingPaint.setStyle(Paint.Style.STROKE);
-        }
-    }
-
-    private Paint getProgressingPaint(){
-        return progressingPaint;
-    }
-
+    //Drawable
     @Override
     public void setAlpha(int i) {
 
@@ -205,16 +198,5 @@ public class CircleProgressDrawable extends Drawable implements Animatable{
     @Override
     public int getOpacity() {
         return PixelFormat.OPAQUE;
-    }
-
-    private float mCurrentSweepAngle;
-    private void setCurrentSweepAngle(float currentSweepAngle) {
-        Log.d(TAG, "setCurrentSweepAngle, angle= "+currentSweepAngle);
-        mCurrentSweepAngle = currentSweepAngle;
-        invalidateSelf();
-    }
-
-    private float getCurrentSweepAngle() {
-        return mCurrentSweepAngle;
     }
 }

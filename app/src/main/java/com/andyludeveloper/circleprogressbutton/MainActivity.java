@@ -17,6 +17,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void initCircleProgressButton(){
         cpb = findViewById(R.id.circle_progress);
+        cpb.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                cpb.click();
+            }
+        });
 
         cpb.setOnTouchListener(new View.OnTouchListener() {
             @Override
